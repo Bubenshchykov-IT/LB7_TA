@@ -1,0 +1,38 @@
+name: Сборка, миграция и тестирование
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-migrate-run-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Установка JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: Клонирование репозитория
+        uses: actions/checkout@v2
+
+      - name: Сборка проекта
+        run: mvn package
+
+      - name: Миграция базы данных
+        run: cmd /c "bin\sqlite3.exe universe.db < src\main\resources\migrations\2023_02_20_000000_create_tables.sql"
+
+      - name: Установка зависимостей Robot Framework
+        run: pip install robotframework
+        
+      - name: Установка зависимостей SeleniumLibrary
+        run: pip install robotframework-seleniumlibrary
+
+      - name: Запуск тестов Robot Framework
+        run: robot src/test/java/robotframework/acceptance/file.robot
